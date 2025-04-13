@@ -1,4 +1,4 @@
-from . import db 
+from . import db
 
 class Guest(db.Model):
     __tablename__ = 'guests'
@@ -10,6 +10,25 @@ class Guest(db.Model):
 
     appearances = db.relationship('Appearance', back_populates='guest', cascade="all, delete-orphan")
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "occupation": self.occupation,
+            "group": self.group,
+            "appearances": [
+                {
+                    "id": a.id,
+                    "rating": a.rating,
+                    "episode": {
+                        "id": a.episode.id,
+                        "date": a.episode.date
+                    }
+                }
+                for a in self.appearances
+            ]
+        }
+
 class Episode(db.Model):
     __tablename__ = 'episodes'
 
@@ -17,6 +36,20 @@ class Episode(db.Model):
     date = db.Column(db.String, nullable=False)
 
     appearances = db.relationship('Appearance', back_populates='episode', cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "date": self.date,
+            "guests": [
+                {
+                    "id": a.guest.id,
+                    "name": a.guest.name,
+                    "rating": a.rating
+                }
+                for a in self.appearances
+            ]
+        }
 
 class Appearance(db.Model):
     __tablename__ = 'appearances'
@@ -29,3 +62,17 @@ class Appearance(db.Model):
 
     guest = db.relationship('Guest', back_populates='appearances')
     episode = db.relationship('Episode', back_populates='appearances')
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "rating": self.rating,
+            "guest": {
+                "id": self.guest.id,
+                "name": self.guest.name
+            },
+            "episode": {
+                "id": self.episode.id,
+                "date": self.episode.date
+            }
+        }
